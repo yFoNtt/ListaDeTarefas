@@ -1,45 +1,76 @@
-function adicionaTarefaNaLista() {
-    // debugger - descomentar para acompanhar o fluxo da pagina
-    // seleciona o elemento de input text que tem o texto da nova tarefa
-    const novaTarefa = document.getElementById('input_nova_tarefa').value
-    criaNovoItemDaLista(novaTarefa)
+window.onload = function() {
+    carregarTarefas();
+};
+
+function adicionarTarefa() {
+    const taskInput = document.getElementById("taskInput");
+    if (taskInput.value === "") {
+        alert("Adicione uma tarefa !");
+        return;
+    }
+
+    const taskList = document.getElementById("taskList");
+    const li = document.createElement("li");
+    li.textContent = taskInput.value;
+    li.onclick = function() {
+        this.classList.toggle("completed");
+        salvarTarefa();
+    };
+    li.ondblclick = function() {
+        editarTarefa(this);
+    };
+    
+    taskList.appendChild(li);
+    salvarTarefa();
+    taskInput.value = "";
 }
 
-function criaNovoItemDaLista(textoDaTarefa) {
-    // recupera a lista de tarefas
-    const listaTarefas = document.getElementById('lista_de_tarefas')
-    // guarda o tamanho da lista de tarefas
-    let qtdTarefas   = listaTarefas.children.length
-
-    // cria um novo elemento do tipo li (lista)
-    const novoItem = document.createElement('li')
-
-    // adiciona o texto digitado no texto da tarefa
-    novoItem.innerText = textoDaTarefa
-    // adiciona um ID no novo elemento
-    novoItem.id = `tarefa_id_${qtdTarefas++}`
-
-    novoItem.appendChild(criaInputCheckBoxTarefa(novoItem.id))
-
-    listaTarefas.appendChild(novoItem)
+function editarTarefa(li) {
+    const newText = prompt("Digite o novo texto da tarefa:", li.textContent);
+    if (newText !== null && newText.trim() !== "") {
+        li.textContent = newText;
+        salvarTarefa();
+    }
 }
 
-
-function criaInputCheckBoxTarefa(idTarefa) {
-    // cria o elemento de input
-    const inputTarefa = document.createElement('input')
-    // seta o elemento para ser do tipo checkbox
-    inputTarefa.type = 'checkbox'
-    // seta o onclick do input
-    inputTarefa.setAttribute('onclick', `mudaEstadoTarefa('${idTarefa}')`)
-    return inputTarefa
+function salvarTarefa() {
+    const tasks = [];
+    document.querySelectorAll("#taskList li").forEach(function(li) {
+        tasks.push({ text: li.textContent, completed: li.classList.contains("completed") });
+    });
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
-function mudaEstadoTarefa(idTarefa) {
-    const tarefaSelecionada = document.getElementById(idTarefa)
-    if (tarefaSelecionada.style.textDecoration == 'line-through') {
-        tarefaSelecionada.style = 'text-decoration: none;'
-    } else {
-        tarefaSelecionada.style = 'text-decoration: line-through;'
-    }    
+function carregarTarefas() {
+    const tasks = JSON.parse(localStorage.getItem("tasks"));
+    if (tasks) {
+        const taskList = document.getElementById("taskList");
+        tasks.forEach(function(tarefa) {
+            const li = document.createElement("li");
+            li.textContent = tarefa.text;
+            if (tarefa.completed) {
+                li.classList.add("completed");
+            }
+            li.onclick = function() {
+                this.classList.toggle("completed");
+                salvarTarefa();
+            };
+            li.ondblclick = function() {
+                editarTarefa(this);
+            };
+            taskList.appendChild(li);
+        });
+    }
+}
+
+function ocultarTarefasConcluidas() {
+    document.querySelectorAll(".completed").forEach(function(tarefa) {
+        tarefa.classList.add("hide");
+    });
+}
+
+function exibirTarefasConcluidas() {
+    document.querySelectorAll(".completed.hide").forEach(function(tarefa) {
+        tarefa.classList.remove("hide");
+    });
 }
